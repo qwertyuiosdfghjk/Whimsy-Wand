@@ -1,0 +1,97 @@
+import processing.sound.*;
+import processing.serial.*; // import the Processing serial library
+int num=50;
+
+
+FFT fft;
+int bands = 64;                          ////Band length to 64
+float[] spectrum = new float[bands];
+SoundFile song;                          //Object declaration for reading the song
+float r;
+float prevr=1;
+Serial myPort;             
+
+float Gyrox;
+float Gyroy;
+float prevx=0;
+float prevy=0;
+float currentx;
+float currenty;
+
+
+int Proxy;
+
+
+void serialEvent(Serial myPort) {
+  // read the serial buffer:
+  String myString = myPort.readStringUntil('\n');
+  if (myString != null) {
+    myString = trim(myString);
+    
+    String temp[] = split(myString,',');
+    
+    //convert from string to the correct data type
+    Gyrox = float(temp[0]);
+    Gyroy = float(temp[1]);
+    //Proxy = int(temp[2]);
+    println(myString);
+  }
+}
+
+void setup() {
+  size(800, 800);
+  background(0);
+ 
+  
+  printArray(Serial.list());
+  String portName = Serial.list()[5];
+  myPort = new Serial(this, portName, 9600);
+
+  myPort.bufferUntil('\n');
+
+  
+  song = new SoundFile(this, "bis.wav");      //Audio File Input
+  fft = new FFT(this, bands);
+  song.loop();
+  fft.input(song);   
+  
+}
+
+void draw() { 
+  //translate(400+400*sin(frameCount/10),400*cos(frameCount/20));
+   translate(400,400);
+  fft.analyze(spectrum);                /////Creates Array using frequency 
+  r = map(spectrum[25],0,0.5,10,height/2);        //Measures the dimensions of the stroke
+  fill(255*sin(frameCount/10),255*sin(frameCount/20),255*sin(frameCount/30),50);
+    //strokeWeight(r);
+  stroke(255,0);
+  currentx=Gyrox;
+  currenty=Gyroy;
+  
+  //prevx*=5;
+  //prevy*=5;
+  currentx*=5;
+  currenty*=5;
+  
+   println("x:"+currentx);
+   println("px:"+prevx);
+   
+       for (int i = 0; i <= num; i++)
+       {
+       println(i+"th x" + prevx+(i/num)*(currentx-prevx));
+     
+      ellipse( prevx+((float)i/num)*(currentx-prevx),prevy+((float)i/num)*(currenty-prevy),prevr+((float)i/num)*(r-prevr),prevr+((float)i/num)*(r-prevr));
+       //ellipse( prevx+((float)i/num)*(currentx-prevx),prevy+((float)i/num)*(currenty-prevy),10,10);
+        //ellipse( prevx+i*10,prevy+i*10,10,10);
+     
+   
+}  
+
+      //strokeWeight(r);
+     // line(prevx*10,prevy*10,Gyrox*10,Gyroy*10);
+      prevx=currentx;
+      prevy=currenty;
+      prevr=r;
+      
+  
+}
